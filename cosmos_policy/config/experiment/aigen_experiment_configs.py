@@ -75,7 +75,7 @@ cosmos_predict2_2b_480p_aigen_gps_driving = LazyDict(
             ),
         ),
         optimizer=dict(
-            lr=1e-4,
+            lr=2e-5,
         ),
         scheduler=dict(
             # LR decay for 15K steps, then constant
