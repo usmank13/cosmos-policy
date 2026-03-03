@@ -118,6 +118,11 @@ def make_config_v2():
 
     rc()
 
+    # Register Aigen GPS driving experiment configs
+    from cosmos_policy.config.experiment.aigen_experiment_configs import register_aigen_configs
+
+    register_aigen_configs()
+
     # Register mock data configs
     # This is a way to bypass the call to register_training_and_val_data() above, which is very slow
     from hydra.core.config_store import ConfigStore

@@ -110,6 +110,15 @@ def _policy_video_vae(
     )
     cfg.update(**kwargs)
 
+    # Resolve local tokenizer path if HF path given
+    if pretrained_path and pretrained_path.startswith("/root/.cache/huggingface/") and os.path.exists(pretrained_path):
+        pass  # use as-is
+    elif pretrained_path and "Wan2.1" in pretrained_path:
+        # Try official Cosmos tokenizer first
+        official_path = "/root/.cache/huggingface/hub/models--nvidia--Cosmos-Predict2-2B-Video2World/snapshots/f50c09f5d8ab133a90cac3f4886a6471e9ba3f18/tokenizer/tokenizer.pth"
+        if os.path.exists(official_path):
+            pretrained_path = official_path
+
     # init model - use our WanVAE_ subclass
     with torch.device("meta"):
         model = WanVAE_(**cfg)
@@ -205,7 +214,7 @@ class CosmosPolicyWanVAE:
     def __init__(
         self,
         z_dim=16,
-        vae_pth="hf://nvidia/Cosmos-Predict2-2B-Video2World/tokenizer/tokenizer.pth",
+        vae_pth="/root/.cache/huggingface/hub/models--nvidia--Cosmos-Predict2-2B-Video2World/snapshots/f50c09f5d8ab133a90cac3f4886a6471e9ba3f18/tokenizer/tokenizer.pth",
         s3_credential_path: str = "credentials/s3_training.secret",
         load_mean_std=False,
         mean_std_path: str = "hf://nvidia/Cosmos-Predict2-2B-Video2World/tokenizer/mean_std.pt",
@@ -478,7 +487,7 @@ class Wan2pt1VAEInterface(VideoTokenizerInterface):
             load_mean_std=load_mean_std,
             vae_pth=kwargs.get(
                 "vae_pth",
-                "hf://nvidia/Cosmos-Predict2-2B-Video2World/tokenizer/tokenizer.pth",
+                "/root/.cache/huggingface/hub/models--nvidia--Cosmos-Predict2-2B-Video2World/snapshots/f50c09f5d8ab133a90cac3f4886a6471e9ba3f18/tokenizer/tokenizer.pth",
             ),
             s3_credential_path=kwargs.get("s3_credential_path", "credentials/s3_training.secret"),
             temporal_window=kwargs.get("temporal_window", 4),

@@ -204,10 +204,18 @@ def rescale_data(data, dataset_stats, data_key, non_negative_only=False, scale_m
         # First, scale to [-1,+1] or [0,+1]:
         # - For [-1,+1]: x_new = 2 * ((x - curr_min) / (curr_max - curr_min)) - 1
         # - For [0,+1]: x_new = (x - curr_min) / (curr_max - curr_min)
+        range_val = curr_max - curr_min
+        # Handle constant dimensions (min == max): set to 0 instead of NaN
+        constant_mask = np.abs(range_val) < 1e-8
+        safe_range = np.where(constant_mask, 1.0, range_val)
+
         if not non_negative_only:  # [-1,+1]
-            rescaled_arr = 2 * ((arr - curr_min) / (curr_max - curr_min)) - 1
+            rescaled_arr = 2 * ((arr - curr_min) / safe_range) - 1
         else:  # [0,+1]
-            rescaled_arr = (arr - curr_min) / (curr_max - curr_min)
+            rescaled_arr = (arr - curr_min) / safe_range
+
+        # Zero out constant dimensions (they carry no information)
+        rescaled_arr = np.where(constant_mask, 0.0, rescaled_arr)
 
         # Scale to [-scale_multiplier,+scale_multiplier] or [0,+scale_multiplier]
         rescaled_arr = scale_multiplier * rescaled_arr
@@ -241,10 +249,17 @@ def rescale_episode_data(episode_data, dataset_stats, data_key, non_negative_onl
     curr_max = dataset_stats[f"{data_key}_max"]
 
     # First, scale to [-1,+1] or [0,+1]:
+    range_val = curr_max - curr_min
+    constant_mask = np.abs(range_val) < 1e-8
+    safe_range = np.where(constant_mask, 1.0, range_val)
+
     if not non_negative_only:  # [-1,+1]
-        rescaled_arr = 2 * ((arr - curr_min) / (curr_max - curr_min)) - 1
+        rescaled_arr = 2 * ((arr - curr_min) / safe_range) - 1
     else:  # [0,+1]
-        rescaled_arr = (arr - curr_min) / (curr_max - curr_min)
+        rescaled_arr = (arr - curr_min) / safe_range
+
+    # Zero out constant dimensions
+    rescaled_arr = np.where(constant_mask, 0.0, rescaled_arr)
 
     # Scale to [-scale_multiplier,+scale_multiplier] or [0,+scale_multiplier]
     rescaled_arr = scale_multiplier * rescaled_arr
